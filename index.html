@@ -53,13 +53,11 @@
             transition: width 0.2s ease-out;
         }
 
-        /* --- LEGEND (ADAPTIVE) --- */
+        /* --- LEGEND --- */
         #legend-container {
             position: fixed; z-index: 1000;
             transition: transform 0.3s ease;
         }
-
-        /* DESKTOP VIEW (Side Panel) */
         @media (min-width: 769px) {
             #legend-container { left: 0; top: 20%; transform: translateX(-260px); display: flex; align-items: flex-start; }
             #legend-container.open { transform: translateX(0); }
@@ -77,8 +75,6 @@
                 max-height: 80vh; overflow-y: auto;
             }
         }
-
-        /* MOBILE VIEW (Bottom Sheet) */
         @media (max-width: 768px) {
             #legend-container { bottom: 0; left: 0; width: 100%; transform: translateY(100%); flex-direction: column; }
             #legend-container.open { transform: translateY(0); }
@@ -88,7 +84,7 @@
                 width: 50px; height: 50px; border-radius: 50%;
                 display: flex; align-items: center; justify-content: center;
                 font-weight: bold; box-shadow: 0 0 15px var(--color-blue);
-                z-index: 1001; cursor: pointer; transform: translateY(-100%); /* Move up with menu */
+                z-index: 1001; cursor: pointer; transform: translateY(-100%);
                 writing-mode: horizontal-tb;
             }
             #legend-content {
@@ -132,20 +128,23 @@
         .btn-money { border-color: var(--color-green); color: var(--color-green); }
         .btn-money:hover { background: var(--color-green); color: #000; }
 
-        /* --- MAP (RESPONSIVE) --- */
+        /* --- MAP --- */
         #map-container {
             display: flex; justify-content: center; margin: 30px auto; padding: 30px;
             background: var(--bg-panel); border: 1px solid var(--border-dim);
-            border-radius: 8px; max-width: 800px; transition: all 0.3s;
+            border-radius: 8px; max-width: 800px;
         }
+        #us-map { display: grid; grid-template-columns: repeat(12, 35px); grid-template-rows: repeat(8, 35px); gap: 6px; }
         
-        /* Desktop Map */
-        #us-map { 
-            display: grid; 
-            grid-template-columns: repeat(12, 35px); 
-            grid-template-rows: repeat(8, 35px); 
-            gap: 6px; 
+        @media (max-width: 768px) {
+             h1 { font-size: 1.5em; letter-spacing: 2px; }
+             .controls { gap: 10px; }
+             button { padding: 8px 12px; font-size: 0.7em; flex: 1 1 40%; }
+             #map-container { padding: 15px; max-width: 100%; overflow-x: auto; }
+             #us-map { grid-template-columns: repeat(12, 24px); grid-template-rows: repeat(8, 24px); gap: 3px; }
+             .map-state { width: 24px; height: 24px; font-size: 8px; }
         }
+
         .map-state {
             width: 35px; height: 35px; border-radius: 2px;
             display: flex; align-items: center; justify-content: center;
@@ -153,22 +152,6 @@
             color: #555; background-color: #222; border: 1px solid #333;
             transition: all 0.2s ease; cursor: default;
         }
-
-        /* Mobile Map Overrides */
-        @media (max-width: 768px) {
-            h1 { font-size: 1.5em; letter-spacing: 2px; }
-            .controls { gap: 10px; }
-            button { padding: 8px 12px; font-size: 0.7em; flex: 1 1 40%; }
-            
-            #map-container { padding: 15px; max-width: 100%; }
-            #us-map { 
-                grid-template-columns: repeat(12, 24px); /* Smaller cells */
-                grid-template-rows: repeat(8, 24px); 
-                gap: 3px; 
-            }
-            .map-state { width: 24px; height: 24px; font-size: 8px; }
-        }
-
         .map-state.live { color: #fff; cursor: pointer; border: 1px solid rgba(255,255,255,0.3); }
         .map-state.border-orange { border: 2px solid var(--color-orange) !important; z-index: 10; }
         .map-state.border-pink { border: 2px solid var(--color-pink) !important; z-index: 5; }
@@ -176,26 +159,17 @@
         .map-state.ready:hover { transform: scale(1.2); z-index: 100; border-color: #fff; }
 
         /* --- CARDS --- */
-        #grid-container { display: grid; gap: 20px; padding: 0 20px; }
-        
-        /* Desktop Grid */
-        @media (min-width: 769px) {
-            #grid-container { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
-            .card.expanded { grid-column: span 2; }
-        }
-        /* Mobile Grid */
-        @media (max-width: 768px) {
-            #grid-container { grid-template-columns: 1fr; padding: 0 10px; }
-            .card.expanded { grid-column: span 1; }
-        }
-        
+        #grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; padding: 0 20px; }
+        @media (max-width: 768px) { #grid-container { grid-template-columns: 1fr; padding: 0 10px; } }
+
         .card {
             background: var(--bg-panel); border: 1px solid var(--border-dim);
             border-radius: 4px; padding: 20px; transition: all 0.2s; display: none;
         }
         .card.visible { display: block; }
         .card:hover { transform: translateY(-3px); border-color: var(--color-blue); }
-        .card.expanded { background: #1a1d2e; border-color: var(--color-blue); z-index: 10; }
+        .card.expanded { grid-column: span 2; background: #1a1d2e; border-color: var(--color-blue); z-index: 10; }
+        @media (max-width: 800px) { .card.expanded { grid-column: span 1; } }
 
         .card-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-dim); padding-bottom: 15px; margin-bottom: 15px; margin-right: 25px; }
         .state-name { font-family: 'Orbitron', sans-serif; font-size: 1.4em; color: #fff; }
@@ -218,7 +192,6 @@
 
         .county-panel { display: none; margin-top: 20px; padding-top: 10px; border-top: 1px dashed var(--border-dim); }
         .card.expanded .county-panel { display: block; }
-        
         .county-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border-dim); }
         .c-name { color: #fff; font-weight: 500; width: 35%; }
         .c-sector { color: #88a; font-size: 0.9em; width: 20%; text-align:center; }
@@ -253,18 +226,11 @@
                 <div class="legend-item"><div class="legend-swatch swatch-pink"></div>Low GDP (Bottom 30%)</div>
                 <div class="legend-item"><div class="legend-swatch swatch-blue"></div>Selected State</div>
             </div>
-            
-            <div class="legend-section">
-                <div class="legend-title">EMPLOYMENT BORDERS</div>
-                <div class="legend-item"><div class="legend-swatch swatch-green"></div>Low Unemployment (< 3%)</div>
-                <div class="legend-item"><div class="legend-swatch swatch-red"></div>High Unemployment (> 5%)</div>
-            </div>
-
             <div class="legend-section">
                 <div class="legend-title">SYMBOLS</div>
-                <div class="legend-item"><span style="width:20px">📰</span> State Economy News</div>
-                <div class="legend-item"><span style="width:20px">🚦</span> Live Traffic Map</div>
-                <div class="legend-item"><span style="width:20px">📡</span> Real-Time Wx Sensor</div>
+                <div class="legend-item"><span style="width:20px">📰</span> Economy News</div>
+                <div class="legend-item"><span style="width:20px">🚦</span> Live Traffic</div>
+                <div class="legend-item"><span style="width:20px">📈</span> Market Data</div>
             </div>
         </div>
         <div id="legend-toggle" onclick="toggleLegend()">KEY</div>
@@ -295,62 +261,69 @@
     </div>
 
     <script>
+        // --- MONETIZATION CONFIG ---
+        const CONFIG = {
+            amazon_tag: "mamoo-20",  // Replace with your Amazon ID
+            broker_url: "https://robinhood.com/signup",
+            traffic_base_url: "https://www.google.com/maps/@" // Fixed URL Base
+        };
+
         function toggleLegend() {
             document.getElementById('legend-container').classList.toggle('open');
         }
 
-        // --- DATA ---
+        // --- DATA (RESTORED 'CHANGE' PROPERTY) ---
         const capitals = [
-            { state: "AL", lat: 33.51, long: -86.81, gdp: 247, growth: 3.1, rate: 3.3, hub: "Birmingham" },
-            { state: "AK", lat: 61.21, long: -149.90, gdp: 65, growth: 4.5, rate: 4.7, hub: "Anchorage" },
-            { state: "AZ", lat: 33.44, long: -112.07, gdp: 475, growth: 3.8, rate: 3.8, hub: "Phoenix" },
-            { state: "AR", lat: 34.74, long: -92.28, gdp: 165, growth: -1.1, rate: 3.4, hub: "Little Rock" },
-            { state: "CA", lat: 34.05, long: -118.24, gdp: 3800, growth: 4.2, rate: 5.5, hub: "Los Angeles" },
-            { state: "CO", lat: 39.73, long: -104.99, gdp: 505, growth: 3.5, rate: 4.4, hub: "Denver" },
-            { state: "CT", lat: 41.05, long: -73.53, gdp: 325, growth: 2.8, rate: 3.0, hub: "Stamford" },
-            { state: "DE", lat: 39.73, long: -75.54, gdp: 90, growth: 1.5, rate: 3.7, hub: "Wilmington" },
-            { state: "FL", lat: 25.76, long: -80.19, gdp: 1600, growth: 7.0, rate: 3.4, hub: "Miami" },
-            { state: "GA", lat: 33.74, long: -84.38, gdp: 800, growth: 2.8, rate: 3.7, hub: "Atlanta" },
-            { state: "HI", lat: 21.30, long: -157.85, gdp: 105, growth: 1.1, rate: 3.0, hub: "Honolulu" },
-            { state: "ID", lat: 43.61, long: -116.20, gdp: 115, growth: 5.0, rate: 3.8, hub: "Boise" },
-            { state: "IL", lat: 41.87, long: -87.62, gdp: 1050, growth: 1.3, rate: 5.2, hub: "Chicago" },
-            { state: "IN", lat: 39.76, long: -86.15, gdp: 470, growth: 1.6, rate: 4.5, hub: "Indianapolis" },
-            { state: "IA", lat: 41.58, long: -93.62, gdp: 245, growth: 1.4, rate: 3.2, hub: "Des Moines" },
-            { state: "KS", lat: 37.68, long: -97.33, gdp: 210, growth: 10.4, rate: 3.6, hub: "Wichita" },
-            { state: "KY", lat: 38.25, long: -85.75, gdp: 260, growth: 1.5, rate: 5.2, hub: "Louisville" },
-            { state: "LA", lat: 29.95, long: -90.07, gdp: 290, growth: 0.9, rate: 4.4, hub: "New Orleans" },
-            { state: "ME", lat: 43.66, long: -70.25, gdp: 90, growth: 1.2, rate: 3.2, hub: "Portland" },
-            { state: "MD", lat: 39.29, long: -76.61, gdp: 480, growth: 1.8, rate: 3.1, hub: "Baltimore" },
-            { state: "MA", lat: 42.36, long: -71.05, gdp: 700, growth: 2.2, rate: 4.1, hub: "Boston" },
-            { state: "MI", lat: 42.33, long: -83.04, gdp: 650, growth: 1.4, rate: 5.0, hub: "Detroit" },
-            { state: "MN", lat: 44.97, long: -93.26, gdp: 470, growth: 1.6, rate: 3.3, hub: "Minneapolis" },
-            { state: "MS", lat: 32.29, long: -90.18, gdp: 140, growth: 0.8, rate: 3.3, hub: "Jackson" },
-            { state: "MO", lat: 38.62, long: -90.19, gdp: 400, growth: 1.5, rate: 3.7, hub: "St. Louis" },
-            { state: "MT", lat: 45.78, long: -108.50, gdp: 75, growth: 2.5, rate: 3.1, hub: "Billings" },
-            { state: "NE", lat: 41.25, long: -95.99, gdp: 175, growth: 1.9, rate: 2.8, hub: "Omaha" },
-            { state: "NV", lat: 36.16, long: -115.13, gdp: 220, growth: 2.8, rate: 5.7, hub: "Las Vegas" },
-            { state: "NH", lat: 42.99, long: -71.45, gdp: 110, growth: 2.0, rate: 2.6, hub: "Manchester" },
-            { state: "NJ", lat: 40.73, long: -74.17, gdp: 750, growth: 1.7, rate: 4.6, hub: "Newark" },
-            { state: "NM", lat: 35.08, long: -106.65, gdp: 125, growth: 1.1, rate: 4.4, hub: "Albuquerque" },
-            { state: "NY", lat: 40.71, long: -74.00, gdp: 2100, growth: 1.6, rate: 4.4, hub: "NYC" },
-            { state: "NC", lat: 35.22, long: -80.84, gdp: 760, growth: 2.6, rate: 3.7, hub: "Charlotte" },
-            { state: "ND", lat: 46.80, long: -96.78, gdp: 70, growth: 7.3, rate: 2.5, hub: "Fargo" },
-            { state: "OH", lat: 39.96, long: -82.99, gdp: 820, growth: 1.4, rate: 4.4, hub: "Columbus" },
-            { state: "OK", lat: 35.46, long: -97.51, gdp: 240, growth: 1.9, rate: 3.3, hub: "OKC" },
-            { state: "OR", lat: 45.51, long: -122.67, gdp: 300, growth: 2.3, rate: 4.1, hub: "Portland" },
-            { state: "PA", lat: 39.95, long: -75.16, gdp: 950, growth: 1.3, rate: 3.6, hub: "Philadelphia" },
-            { state: "RI", lat: 41.82, long: -71.41, gdp: 75, growth: 1.0, rate: 4.6, hub: "Providence" },
-            { state: "SC", lat: 32.77, long: -79.93, gdp: 300, growth: 2.7, rate: 4.7, hub: "Charleston" },
-            { state: "SD", lat: 43.54, long: -96.73, gdp: 70, growth: 2.0, rate: 1.9, hub: "Sioux Falls" },
-            { state: "TN", lat: 36.16, long: -86.78, gdp: 490, growth: 5.5, rate: 3.6, hub: "Nashville" },
-            { state: "TX", lat: 29.76, long: -95.36, gdp: 2400, growth: 3.0, rate: 4.2, hub: "Houston" },
-            { state: "UT", lat: 40.76, long: -111.89, gdp: 250, growth: 3.4, rate: 3.5, hub: "Salt Lake City" },
-            { state: "VT", lat: 44.47, long: -73.21, gdp: 40, growth: 1.2, rate: 2.4, hub: "Burlington" },
-            { state: "VA", lat: 36.85, long: -75.97, gdp: 650, growth: 2.0, rate: 3.0, hub: "Virginia Beach" },
-            { state: "WA", lat: 47.60, long: -122.33, gdp: 750, growth: 2.5, rate: 4.5, hub: "Seattle" },
-            { state: "WV", lat: 38.34, long: -81.63, gdp: 95, growth: 0.5, rate: 4.2, hub: "Charleston" },
-            { state: "WI", lat: 43.03, long: -87.91, gdp: 400, growth: 1.3, rate: 3.0, hub: "Milwaukee" },
-            { state: "WY", lat: 41.13, long: -104.82, gdp: 50, growth: 1.1, rate: 3.5, hub: "Cheyenne" }
+            { state: "AL", lat: 33.51, long: -86.81, gdp: 247, growth: 3.1, rate: 3.3, change: 0.1, hub: "Birmingham" },
+            { state: "AK", lat: 61.21, long: -149.90, gdp: 65, growth: 4.5, rate: 4.7, change: -0.1, hub: "Anchorage" },
+            { state: "AZ", lat: 33.44, long: -112.07, gdp: 475, growth: 3.8, rate: 3.8, change: 0.0, hub: "Phoenix" },
+            { state: "AR", lat: 34.74, long: -92.28, gdp: 165, growth: -1.1, rate: 3.4, change: 0.2, hub: "Little Rock" },
+            { state: "CA", lat: 34.05, long: -118.24, gdp: 3800, growth: 4.2, rate: 5.5, change: -0.2, hub: "Los Angeles" },
+            { state: "CO", lat: 39.73, long: -104.99, gdp: 505, growth: 3.5, rate: 4.4, change: 0.1, hub: "Denver" },
+            { state: "CT", lat: 41.05, long: -73.53, gdp: 325, growth: 2.8, rate: 3.0, change: -0.1, hub: "Stamford" },
+            { state: "DE", lat: 39.73, long: -75.54, gdp: 90, growth: 1.5, rate: 3.7, change: 0.1, hub: "Wilmington" },
+            { state: "FL", lat: 25.76, long: -80.19, gdp: 1600, growth: 7.0, rate: 3.4, change: -0.2, hub: "Miami" },
+            { state: "GA", lat: 33.74, long: -84.38, gdp: 800, growth: 2.8, rate: 3.7, change: 0.0, hub: "Atlanta" },
+            { state: "HI", lat: 21.30, long: -157.85, gdp: 105, growth: 1.1, rate: 3.0, change: 0.2, hub: "Honolulu" },
+            { state: "ID", lat: 43.61, long: -116.20, gdp: 115, growth: 5.0, rate: 3.8, change: 0.1, hub: "Boise" },
+            { state: "IL", lat: 41.87, long: -87.62, gdp: 1050, growth: 1.3, rate: 5.2, change: -0.1, hub: "Chicago" },
+            { state: "IN", lat: 39.76, long: -86.15, gdp: 470, growth: 1.6, rate: 4.5, change: 0.1, hub: "Indianapolis" },
+            { state: "IA", lat: 41.58, long: -93.62, gdp: 245, growth: 1.4, rate: 3.2, change: -0.1, hub: "Des Moines" },
+            { state: "KS", lat: 37.68, long: -97.33, gdp: 210, growth: 10.4, rate: 3.6, change: 0.0, hub: "Wichita" },
+            { state: "KY", lat: 38.25, long: -85.75, gdp: 260, growth: 1.5, rate: 5.2, change: 0.2, hub: "Louisville" },
+            { state: "LA", lat: 29.95, long: -90.07, gdp: 290, growth: 0.9, rate: 4.4, change: 0.1, hub: "New Orleans" },
+            { state: "ME", lat: 43.66, long: -70.25, gdp: 90, growth: 1.2, rate: 3.2, change: 0.0, hub: "Portland" },
+            { state: "MD", lat: 39.29, long: -76.61, gdp: 480, growth: 1.8, rate: 3.1, change: -0.2, hub: "Baltimore" },
+            { state: "MA", lat: 42.36, long: -71.05, gdp: 700, growth: 2.2, rate: 4.1, change: 0.1, hub: "Boston" },
+            { state: "MI", lat: 42.33, long: -83.04, gdp: 650, growth: 1.4, rate: 5.0, change: 0.3, hub: "Detroit" },
+            { state: "MN", lat: 44.97, long: -93.26, gdp: 470, growth: 1.6, rate: 3.3, change: -0.1, hub: "Minneapolis" },
+            { state: "MS", lat: 32.29, long: -90.18, gdp: 140, growth: 0.8, rate: 3.3, change: 0.0, hub: "Jackson" },
+            { state: "MO", lat: 38.62, long: -90.19, gdp: 400, growth: 1.5, rate: 3.7, change: 0.1, hub: "St. Louis" },
+            { state: "MT", lat: 45.78, long: -108.50, gdp: 75, growth: 2.5, rate: 3.1, change: 0.0, hub: "Billings" },
+            { state: "NE", lat: 41.25, long: -95.99, gdp: 175, growth: 1.9, rate: 2.8, change: -0.1, hub: "Omaha" },
+            { state: "NV", lat: 36.16, long: -115.13, gdp: 220, growth: 2.8, rate: 5.7, change: 0.2, hub: "Las Vegas" },
+            { state: "NH", lat: 42.99, long: -71.45, gdp: 110, growth: 2.0, rate: 2.6, change: -0.1, hub: "Manchester" },
+            { state: "NJ", lat: 40.73, long: -74.17, gdp: 750, growth: 1.7, rate: 4.6, change: 0.1, hub: "Newark" },
+            { state: "NM", lat: 35.08, long: -106.65, gdp: 125, growth: 1.1, rate: 4.4, change: 0.0, hub: "Albuquerque" },
+            { state: "NY", lat: 40.71, long: -74.00, gdp: 2100, growth: 1.6, rate: 4.4, change: -0.2, hub: "NYC" },
+            { state: "NC", lat: 35.22, long: -80.84, gdp: 760, growth: 2.6, rate: 3.7, change: 0.1, hub: "Charlotte" },
+            { state: "ND", lat: 46.80, long: -96.78, gdp: 70, growth: 7.3, rate: 2.5, change: -0.1, hub: "Fargo" },
+            { state: "OH", lat: 39.96, long: -82.99, gdp: 820, growth: 1.4, rate: 4.4, change: 0.1, hub: "Columbus" },
+            { state: "OK", lat: 35.46, long: -97.51, gdp: 240, growth: 1.9, rate: 3.3, change: -0.1, hub: "OKC" },
+            { state: "OR", lat: 45.51, long: -122.67, gdp: 300, growth: 2.3, rate: 4.1, change: 0.1, hub: "Portland" },
+            { state: "PA", lat: 39.95, long: -75.16, gdp: 950, growth: 1.3, rate: 3.6, change: 0.0, hub: "Philadelphia" },
+            { state: "RI", lat: 41.82, long: -71.41, gdp: 75, growth: 1.0, rate: 4.6, change: 0.1, hub: "Providence" },
+            { state: "SC", lat: 32.77, long: -79.93, gdp: 300, growth: 2.7, rate: 4.7, change: 0.2, hub: "Charleston" },
+            { state: "SD", lat: 43.54, long: -96.73, gdp: 70, growth: 2.0, rate: 1.9, change: -0.1, hub: "Sioux Falls" },
+            { state: "TN", lat: 36.16, long: -86.78, gdp: 490, growth: 5.5, rate: 3.6, change: 0.1, hub: "Nashville" },
+            { state: "TX", lat: 29.76, long: -95.36, gdp: 2400, growth: 3.0, rate: 4.2, change: 0.0, hub: "Houston" },
+            { state: "UT", lat: 40.76, long: -111.89, gdp: 250, growth: 3.4, rate: 3.5, change: -0.1, hub: "Salt Lake City" },
+            { state: "VT", lat: 44.47, long: -73.21, gdp: 40, growth: 1.2, rate: 2.4, change: 0.0, hub: "Burlington" },
+            { state: "VA", lat: 36.85, long: -75.97, gdp: 650, growth: 2.0, rate: 3.0, change: 0.1, hub: "Virginia Beach" },
+            { state: "WA", lat: 47.60, long: -122.33, gdp: 750, growth: 2.5, rate: 4.5, change: 0.1, hub: "Seattle" },
+            { state: "WV", lat: 38.34, long: -81.63, gdp: 95, growth: 0.5, rate: 4.2, change: 0.2, hub: "Charleston" },
+            { state: "WI", lat: 43.03, long: -87.91, gdp: 400, growth: 1.3, rate: 3.0, change: -0.1, hub: "Milwaukee" },
+            { state: "WY", lat: 41.13, long: -104.82, gdp: 50, growth: 1.1, rate: 3.5, change: 0.1, hub: "Cheyenne" }
         ];
 
         const mapGrid = {
@@ -638,7 +611,7 @@
                     <div class="stat-item"><span>WIND</span><span class="stat-val">${item.wind} mph</span></div>
                     <div class="stat-item">
                         <span>TRAFFIC</span>
-                        <a href="https://www.google.com/maps/@${item.capital.lat},${item.capital.long},7z/data=!5m1!1e1" target="_blank" style="text-decoration:none; display:block; margin-top:4px;">🚦</a>
+                        <a href="https://www.google.com/maps/@${item.capital.lat},${item.capital.long},9z/data=!5m1!1e1" target="_blank" style="text-decoration:none; display:block; margin-top:4px;">🚦</a>
                     </div>
                 </div>
 
