@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MaMoo Monitor</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- GLOBAL THEME --- */
+        :root {
+            --color-blue: #00f3ff;
+            --color-green: #00ff9f;
+            --color-red: #ff0055;
+            --color-orange: #ffaa00;
+            --color-pink: #ff00ff;
+            --bg-dark: #0b0c15;
+            --bg-panel: #151725;
+            --border-dim: #2a2d3e;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: #e6edf3;
+            font-family: 'Rajdhani', sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: max-width 0.3s, border 0.3s; /* Smooth transition for mobile toggle */
+        }
+
+        /* --- MOBILE SIMULATOR CLASS (Toggled by Button) --- */
+        body.mobile-mode {
+            max-width: 400px;
+            margin: 0 auto;
+            border-left: 1px solid #333;
+            border-right: 1px solid #333;
+        }
+
+        /* --- LOADING SCREEN --- */
+        #loading-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-dark); z-index: 9999;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .loader-content { text-align: center; width: 300px; }
+        .loader-content h1 {
+            font-family: 'Orbitron', sans-serif; font-size: 4em; letter-spacing: 4px; 
+            color: var(--color-blue); margin: 0; padding: 0; border: none;
+        }
+        .loading-bar-container {
+            width: 100%; height: 4px; background: #333; margin-top: 20px;
+            border-radius: 2px; overflow: hidden;
+        }
+        .loading-bar {
+            height: 100%; width: 0%; background: var(--color-blue);
+            transition: width 0.2s ease-out;
+        }
+
+        /* --- LEGEND --- */
+        #legend-container {
+            position: fixed; left: 0; top: 20%; z-index: 1000;
+            display: flex; align-items: flex-start;
+            transition: transform 0.3s ease;
+            transform: translateX(-260px);
+        }
+        #legend-container.open { transform: translateX(0); }
+
+        #legend-toggle {
+            background: var(--bg-panel); border: 1px solid var(--color-blue);
+            border-left: none; border-radius: 0 4px 4px 0;
+            padding: 15px 8px; cursor: pointer; color: var(--color-blue);
+            writing-mode: vertical-rl; text-orientation: mixed;
+            font-family: 'Orbitron', sans-serif; font-size: 0.8em; letter-spacing: 2px;
+            box-shadow: 4px 4px 10px rgba(0,0,0,0.5);
+        }
+        #legend-toggle:hover { background: var(--color-blue); color: #000; }
+
+        #legend-content {
+            width: 260px; background: rgba(15, 20, 35, 0.95);
+            border: 1px solid var(--color-blue); border-left: none;
+            padding: 20px; box-sizing: border-box;
+            backdrop-filter: blur(10px);
+            box-shadow: 5px 0 20px rgba(0,0,0,0.5);
+            max-height: 80vh; overflow-y: auto;
+        }
+        .legend-section { margin-bottom: 20px; }
+        .legend-title { font-family: 'Orbitron', sans-serif; color: #fff; font-size: 0.9em; border-bottom: 1px solid #333; padding-bottom: 5px; margin-bottom: 10px; }
+        .legend-item { display: flex; align-items: center; margin-bottom: 8px; font-size: 0.85em; color: #aaa; }
+        .legend-swatch { width: 12px; height: 12px; margin-right: 10px; border-radius: 2px; }
+        .swatch-orange { border: 2px solid var(--color-orange); }
+        .swatch-pink { border: 2px solid var(--color-pink); }
+        .swatch-red { border: 2px solid var(--color-red); }
+        .swatch-green { border: 2px solid var(--color-green); }
+        .swatch-blue { border: 2px solid var(--color-blue); background: var(--color-blue); }
+
+        /* --- MAIN INTERFACE --- */
+        #main-interface { padding: 20px; animation: fade-in 0.5s ease-out; }
+        @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+        h1 { 
+            font-family: 'Orbitron', sans-serif; text-transform: uppercase; 
+            letter-spacing: 4px; color: var(--color-blue); text-align: center;
+            margin-bottom: 30px; border-bottom: 1px solid var(--border-dim); padding-bottom: 20px;
+        }
+
+        /* --- CONTROLS --- */
+        .controls { margin: 20px 0; display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
+        button {
+            background: var(--bg-panel); color: var(--color-blue); 
+            border: 1px solid var(--color-blue); padding: 10px 16px; border-radius: 4px; 
+            font-family: 'Orbitron', sans-serif; font-size: 0.8em; letter-spacing: 1px; 
+            cursor: pointer; transition: all 0.2s; text-transform: uppercase; min-width: 100px;
+        }
+        button:hover { background: var(--color-blue); color: #000; transform: translateY(-2px); }
+        
+        .btn-alert { border-color: var(--color-red); color: var(--color-red); }
+        .btn-alert:hover { background: var(--color-red); color: #fff; }
+        .btn-money { border-color: var(--color-green); color: var(--color-green); }
+        .btn-money:hover { background: var(--color-green); color: #000; }
+        .btn-mobile { border-color: #fff; color: #fff; } /* New Mobile Button Style */
+        .btn-mobile:hover { background: #fff; color: #000; }
+
+        /* --- MAP --- */
+        #map-container {
+            display: flex; justify-content: center; margin: 30px auto; padding: 30px;
+            background: var(--bg-panel); border: 1px solid var(--border-dim);
+            border-radius: 8px; max-width: 800px; transition: padding 0.3s;
+        }
+        #us-map { 
+            display: grid; 
+            grid-template-columns: repeat(12, 35px); 
+            grid-template-rows: repeat(8, 35px); 
+            gap: 6px; 
+            transition: gap 0.3s;
+        }
+
+        .map-state {
+            width: 35px; height: 35px; border-radius: 2px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 10px; font-family: 'Orbitron', sans-serif;
+            color: #555; background-color: #222; border: 1px solid #333;
+            transition: all 0.2s ease; cursor: default;
+        }
+        .map-state.live { color: #fff; cursor: pointer; border: 1px solid rgba(255,255,255,0.3); }
+        .map-state.border-orange { border: 2px solid var(--color-orange) !important; z-index: 10; }
+        .map-state.border-pink { border: 2px solid var(--color-pink) !important; z-index: 5; }
+        .map-state.selected { background-color: var(--color-blue) !important; color: #000; border: 2px solid #fff !important; z-index: 50; }
+        .map-state.ready:hover { transform: scale(1.2); z-index: 100; border-color: #fff; }
+
+        /* --- CARDS --- */
+        #grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; padding: 0 20px; }
+        
+        .card {
+            background: var(--bg-panel); border: 1px solid var(--border-dim);
+            border-radius: 4px; padding: 20px; transition: all 0.2s; display: none;
+        }
+        .card.visible { display: block; }
+        .card:hover { transform: translateY(-3px); border-color: var(--color-blue); }
+        .card.expanded { grid-column: span 2; background: #1a1d2e; border-color: var(--color-blue); z-index: 10; }
+        
+        /* --- MOBILE OPTIMIZATIONS (AND SIMULATOR) --- */
+        /* This applies if screen is small OR if body has .mobile-mode class */
+        @media (max-width: 768px), (max-width: 2000px) and (min-width: 0px) {
+            /* We use a special trick here: The .mobile-mode class overrides everything */
+            body.mobile-mode #us-map {
+                grid-template-columns: repeat(12, 25px); /* Shrink grid */
+                grid-template-rows: repeat(8, 25px);
+                gap: 3px;
+            }
+            body.mobile-mode .map-state { width: 25px; height: 25px; font-size: 8px; }
+            body.mobile-mode #map-container { padding: 15px; }
+            body.mobile-mode #grid-container { grid-template-columns: 1fr; padding: 0; }
+            body.mobile-mode .card.expanded { grid-column: span 1; }
+            body.mobile-mode .controls { gap: 10px; }
+            body.mobile-mode button { flex: 1 1 40%; font-size: 0.7em; padding: 8px; }
+            body.mobile-mode h1 { font-size: 1.5em; letter-spacing: 2px; }
+        }
+        
+        /* Standard Media Query for Real Phones (Always Active) */
+        @media (max-width: 768px) {
+            #us-map { grid-template-columns: repeat(12, 25px); grid-template-rows: repeat(8, 25px); gap: 3px; }
+            .map-state { width: 25px; height: 25px; font-size: 8px; }
+            #map-container { padding: 10px; overflow-x: auto; }
+            #grid-container { grid-template-columns: 1fr; padding: 0; }
+            .card.expanded { grid-column: span 1; }
+        }
+
+        .card-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-dim); padding-bottom: 15px; margin-bottom: 15px; margin-right: 25px; }
+        .state-name { font-family: 'Orbitron', sans-serif; font-size: 1.4em; color: #fff; }
+        .risk-score { font-family: 'Orbitron', sans-serif; font-size: 1.2em; color: var(--color-red); }
+        
+        .weather-stats { display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 1em; color: #889; background: #0b0c15; padding: 10px; border-radius: 4px; }
+        .stat-val { display: block; color: #fff; font-weight: 700; font-size: 1.2em; margin-top: 4px; }
+        
+        .econ-stats { background: #0b0c15; margin-top: 10px; padding: 15px; border-radius: 4px; border: 1px solid var(--border-dim); }
+        .econ-label { font-family: 'Orbitron', sans-serif; font-size: 0.7em; color: #667; letter-spacing: 1px; margin-bottom: 5px; }
+        .econ-value { font-size: 1.4em; font-weight: 700; color: var(--color-green); display: flex; justify-content: space-between; }
+        .trend-up { color: var(--color-green); } .trend-down { color: var(--color-red); }
+        
+        .alert-desc { color: var(--color-red); margin-top: 15px; font-weight: bold; font-size: 0.9em; }
+        .industry-text { font-family: 'Orbitron', sans-serif; font-size: 0.8em; color: var(--color-purple); letter-spacing: 2px; margin-top: 15px; text-align: center; }
+
+        .close-card-btn { position: absolute; top: 15px; right: 15px; width: 28px; height: 28px; line-height: 26px; text-align: center; border-radius: 50%; background: var(--border-dim); color: #fff; cursor: pointer; transition: all 0.2s; display: none; font-family: sans-serif; }
+        .card.visible .close-card-btn { display: block; }
+        .close-card-btn:hover { background: var(--color-red); }
+
+        .county-panel { display: none; margin-top: 20px; padding-top: 10px; border-top: 1px dashed var(--border-dim); }
+        .card.expanded .county-panel { display: block; }
+        .county-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border-dim); }
+        .c-name { color: #fff; font-weight: 500; width: 35%; }
+        .c-sector { color: #88a; font-size: 0.9em; width: 20%; text-align:center; }
+        .c-gdp { color: var(--color-green); width: 20%; text-align: right; font-family: 'Orbitron', monospace; font-size: 0.9em; }
+        
+        .btn-mini { padding: 4px 10px; font-size: 0.8em; font-family: 'Orbitron', sans-serif; color: var(--color-green); border: 1px solid var(--color-green); background: transparent; border-radius: 20px; text-decoration: none; transition: all 0.2s; width: 25%; text-align: center; }
+        .btn-mini:hover { background: var(--color-green); color: #000; }
+        
+        .expand-hint { text-align: center; font-size: 0.7em; color: #556; margin-top: 15px; letter-spacing: 1px; text-transform: uppercase; }
+        .card-footer { margin-top: 20px; }
+        .action-btn { display: block; width: 100%; padding: 12px 0; border-radius: 4px; text-decoration: none; font-weight: bold; font-family: 'Orbitron', sans-serif; letter-spacing: 1px; transition: all 0.3s; text-transform: uppercase; position: relative; z-index: 5; text-align: center; font-size: 0.9em; }
+        .btn-danger { background: rgba(255, 0, 85, 0.1); color: var(--color-red); border: 1px solid var(--color-red); }
+        .btn-danger:hover { background: var(--color-red); color: #fff; }
+        .btn-link { text-decoration: none; color: var(--color-blue); font-size: 0.8em; margin-left: 10px; opacity: 0.7; transition: opacity 0.2s; }
+        .btn-link:hover { opacity: 1; text-shadow: 0 0 5px var(--color-blue); }
+        
+        #status-bar { text-align: center; font-family: 'Orbitron', sans-serif; font-size: 0.8em; color: var(--color-blue); letter-spacing: 2px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <div id="legend-container">
+        <div id="legend-content">
+            <div class="legend-section">
+                <div class="legend-title">MAP INDICATORS</div>
+                <div class="legend-item"><div class="legend-swatch swatch-orange"></div>High Risk (Weather)</div>
+                <div class="legend-item"><div class="legend-swatch swatch-pink"></div>Low GDP (Bottom 30%)</div>
+                <div class="legend-item"><div class="legend-swatch swatch-blue"></div>Selected State</div>
+            </div>
+            
+            <div class="legend-section">
+                <div class="legend-title">EMPLOYMENT BORDERS</div>
+                <div class="legend-item"><div class="legend-swatch swatch-green"></div>Low Unemployment (< 3%)</div>
+                <div class="legend-item"><div class="legend-swatch swatch-red"></div>High Unemployment (> 5%)</div>
+            </div>
+
+            <div class="legend-section">
+                <div class="legend-title">SYMBOLS</div>
+                <div class="legend-item"><span style="width:20px">📰</span> State Economy News</div>
+                <div class="legend-item"><span style="width:20px">🚦</span> Live Traffic Map</div>
+                <div class="legend-item"><span style="width:20px">📡</span> Real-Time Wx Sensor</div>
+            </div>
+        </div>
+        <div id="legend-toggle" onclick="toggleLegend()">KEY</div>
+    </div>
+
+    <div id="loading-screen">
+        <div class="loader-content">
+            <h1>MaMoo</h1>
+            <div class="loading-bar-container">
+                <div id="boot-bar" class="loading-bar"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="main-interface" style="display: none;">
+        <div class="dashboard-header">
+            <h1>MaMoo Market Monitor</h1>
+            <div class="controls">
+                <button onclick="refreshDashboard()" class="btn-refresh">↻ Re-Sync</button>
+                <button id="btn-toggle-all" onclick="toggleShowAll()">Show All</button>
+                <button onclick="filterRisks()" class="btn-alert">⚠️ High Volatility</button>
+                <button onclick="sortWealth()" class="btn-money">💰 Sort by GDP</button>
+                <button id="btn-mobile" onclick="toggleMobile()" class="btn-mobile">📱 Mobile</button>
+            </div>
+            <div id="map-container"><div id="us-map"></div></div>
+            <div id="status-bar">Live Market Data Active.</div>
+        </div>
+        <div id="grid-container"></div>
+    </div>
+
+    <script>
+        // --- MOBILE TOGGLE ---
+        function toggleMobile() {
+            document.body.classList.toggle('mobile-mode');
+            const btn = document.getElementById('btn-mobile');
+            if (document.body.classList.contains('mobile-mode')) {
+                btn.innerText = "💻 Desktop";
+            } else {
+                btn.innerText = "📱 Mobile";
+            }
+        }
+
+        function toggleLegend() {
+            document.getElementById('legend-container').classList.toggle('open');
+        }
+
+        // --- DATA (Q2 2025 Verified) ---
+        const capitals = [
+            { state: "AL", lat: 33.51, long: -86.81, gdp: 247, growth: 3.1, rate: 3.3, hub: "Birmingham" },
+            { state: "AK", lat: 61.21, long: -149.90, gdp: 65, growth: 4.5, rate: 4.7, hub: "Anchorage" },
+            { state: "AZ", lat: 33.44, long: -112.07, gdp: 475, growth: 3.8, rate: 3.8, hub: "Phoenix" },
+            { state: "AR", lat: 34.74, long: -92.28, gdp: 165, growth: -1.1, rate: 3.4, hub: "Little Rock" },
+            { state: "CA", lat: 34.05, long: -118.24, gdp: 3800, growth: 4.2, rate: 5.5, hub: "Los Angeles" },
+            { state: "CO", lat: 39.73, long: -104.99, gdp: 505, growth: 3.5, rate: 4.4, hub: "Denver" },
+            { state: "CT", lat: 41.05, long: -73.53, gdp: 325, growth: 2.8, rate: 3.0, hub: "Stamford" },
+            { state: "DE", lat: 39.73, long: -75.54, gdp: 90, growth: 1.5, rate: 3.7, hub: "Wilmington" },
+            { state: "FL", lat: 25.76, long: -80.19, gdp: 1600, growth: 7.0, rate: 3.4, hub: "Miami" },
+            { state: "GA", lat: 33.74, long: -84.38, gdp: 800, growth: 2.8, rate: 3.7, hub: "Atlanta" },
+            { state: "HI", lat: 21.30, long: -157.85, gdp: 105, growth: 1.1, rate: 3.0, hub: "Honolulu" },
+            { state: "ID", lat: 43.61, long: -116.20, gdp: 115, growth: 5.0, rate: 3.8, hub: "Boise" },
+            { state: "IL", lat: 41.87, long: -87.62, gdp: 1050, growth: 1.3, rate: 5.2, hub: "Chicago" },
+            { state: "IN", lat: 39.76, long: -86.15, gdp: 470, growth: 1.6, rate: 4.5, hub: "Indianapolis" },
+            { state: "IA", lat: 41.58, long: -93.62, gdp: 245, growth: 1.4, rate: 3.2, hub: "Des Moines" },
+            { state: "KS", lat: 37.68, long: -97.33, gdp: 210, growth: 10.4, rate: 3.6, hub: "Wichita" },
+            { state: "KY", lat: 38.25, long: -85.75, gdp: 260, growth: 1.5, rate: 5.2, hub: "Louisville" },
+            { state: "LA", lat: 29.95, long: -90.07, gdp: 290, growth: 0.9, rate: 4.4, hub: "New Orleans" },
+            { state: "ME", lat: 43.66, long: -70.25, gdp: 90, growth: 1.2, rate: 3.2, hub: "Portland" },
+            { state: "MD", lat: 39.29, long: -76.61, gdp: 480, growth: 1.8, rate: 3.1, hub: "Baltimore" },
+            { state: "MA", lat: 42.36, long: -71.05, gdp: 700, growth: 2.2, rate: 4.1, hub: "Boston" },
+            { state: "MI", lat: 42.33, long: -83.04, gdp: 650, growth: 1.4, rate: 5.0, hub: "Detroit" },
+            { state: "MN", lat: 44.97, long: -93.26, gdp: 470, growth: 1.6, rate: 3.3, hub: "Minneapolis" },
+            { state: "MS", lat: 32.29, long: -90.18, gdp: 140, growth: 0.8, rate: 3.3, hub: "Jackson" },
+            { state: "MO", lat: 38.62, long: -90.19, gdp: 400, growth: 1.5, rate: 3.7, hub: "St. Louis" },
+            { state: "MT", lat: 45.78, long: -108.50, gdp: 75, growth: 2.5, rate: 3.1, hub: "Billings" },
+            { state: "NE", lat: 41.25, long: -95.99, gdp: 175, growth: 1.9, rate: 2.8, hub: "Omaha" },
+            { state: "NV", lat: 36.16, long: -115.13, gdp: 220, growth: 2.8, rate: 5.7, hub: "Las Vegas" },
+            { state: "NH", lat: 42.99, long: -71.45, gdp: 110, growth: 2.0, rate: 2.6, hub: "Manchester" },
+            { state: "NJ", lat: 40.73, long: -74.17, gdp: 750, growth: 1.7, rate: 4.6, hub: "Newark" },
+            { state: "NM", lat: 35.08, long: -106.65, gdp: 125, growth: 1.1, rate: 4.4, hub: "Albuquerque" },
+            { state: "NY", lat: 40.71, long: -74.00, gdp: 2100, growth: 1.6, rate: 4.4, hub: "NYC" },
+            { state: "NC", lat: 35.22, long: -80.84, gdp: 760, growth: 2.6, rate: 3.7, hub: "Charlotte" },
+            { state: "ND", lat: 46.80, long: -96.78, gdp: 70, growth: 7.3, rate: 2.5, hub: "Fargo" },
+            { state: "OH", lat: 39.96, long: -82.99, gdp: 820, growth: 1.4, rate: 4.4, hub: "Columbus" },
+            { state: "OK", lat: 35.46, long: -97.51, gdp: 240, growth: 1.9, rate: 3.3, hub: "OKC" },
+            { state: "OR", lat: 45.51, long: -122.67, gdp: 300, growth: 2.3, rate: 4.1, hub: "Portland" },
+            { state: "PA", lat: 39.95, long: -75.16, gdp: 950, growth: 1.3, rate: 3.6, hub: "Philadelphia" },
+            { state: "RI", lat: 41.82, long: -71.41, gdp: 75, growth: 1.0, rate: 4.6, hub: "Providence" },
+            { state: "SC", lat: 32.77, long: -79.93, gdp: 300, growth: 2.7, rate: 4.7, hub: "Charleston" },
+            { state: "SD", lat: 43.54, long: -96.73, gdp: 70, growth: 2.0, rate: 1.9, hub: "Sioux Falls" },
+            { state: "TN", lat: 36.16, long: -86.78, gdp: 490, growth: 5.5, rate: 3.6, hub: "Nashville" },
+            { state: "TX", lat: 29.76, long: -95.36, gdp: 2400, growth: 3.0, rate: 4.2, hub: "Houston" },
+            { state: "UT", lat: 40.76, long: -111.89, gdp: 250, growth: 3.4, rate: 3.5, hub: "Salt Lake City" },
+            { state: "VT", lat: 44.47, long: -73.21, gdp: 40, growth: 1.2, rate: 2.4, hub: "Burlington" },
+            { state: "VA", lat: 36.85, long: -75.97, gdp: 650, growth: 2.0, rate: 3.0, hub: "Virginia Beach" },
+            { state: "WA", lat: 47.60, long: -122.33, gdp: 750, growth: 2.5, rate: 4.5, hub: "Seattle" },
+            { state: "WV", lat: 38.34, long: -81.63, gdp: 95, growth: 0.5, rate: 4.2, hub: "Charleston" },
+            { state: "WI", lat: 43.03, long: -87.91, gdp: 400, growth: 1.3, rate: 3.0, hub: "Milwaukee" },
+            { state: "WY", lat: 41.13, long: -104.82, gdp: 50, growth: 1.1, rate: 3.5, hub: "Cheyenne" }
+        ];
+
+        const mapGrid = {
+            "AK": [0,0], "ME": [0,11], "VT": [1,10], "NH": [1,11], "WA": [2,1], "ID": [2,2], "MT": [2,3], "ND": [2,4], "MN": [2,5], "WI": [2,6], "MI": [2,7], "NY": [2,9], "MA": [2,10], "RI": [2,11], "OR": [3,1], "NV": [3,2], "WY": [3,3], "SD": [3,4], "IA": [3,5], "IL": [3,6], "IN": [3,7], "OH": [3,8], "PA": [3,9], "NJ": [3,10], "CT": [3,11], "CA": [4,1], "UT": [4,2], "CO": [4,3], "NE": [4,4], "MO": [4,5], "KY": [4,6], "WV": [4,7], "VA": [4,8], "MD": [4,9], "DE": [4,10], "AZ": [5,2], "NM": [5,3], "KS": [5,4], "AR": [5,5], "TN": [5,6], "NC": [5,7], "SC": [5,8], "OK": [6,4], "LA": [6,5], "MS": [6,6], "AL": [6,7], "GA": [6,8], "HI": [7,0], "TX": [7,4], "FL": [7,9]
+        };
+
+        const stateIndustries = {
+            "AL": { name: "Aerospace", ticker: "XLI" }, "AK": { name: "Energy", ticker: "XLE" }, "AZ": { name: "Chips", ticker: "SMH" }, "AR": { name: "Agri", ticker: "DBA" }, "CA": { name: "Big Tech", ticker: "XLK" }, "CO": { name: "Mining", ticker: "XME" }, "CT": { name: "Insurance", ticker: "KIE" }, "DE": { name: "Finance", ticker: "XLF" }, "FL": { name: "Real Est", ticker: "XLRE" }, "GA": { name: "Logistics", ticker: "IYT" }, "HI": { name: "Tourism", ticker: "PEJ" }, "ID": { name: "Agri", ticker: "DBA" }, "IL": { name: "Industry", ticker: "XLI" }, "IN": { name: "Industry", ticker: "XLI" }, "IA": { name: "Corn", ticker: "CORN" }, "KS": { name: "Wheat", ticker: "WEAT" }, "KY": { name: "Auto", ticker: "CARZ" }, "LA": { name: "Oil", ticker: "XLE" }, "ME": { name: "Fish", ticker: "XLP" }, "MD": { name: "Biotech", ticker: "XBI" }, "MA": { name: "Biotech", ticker: "XBI" }, "MI": { name: "Auto", ticker: "CARZ" }, "MN": { name: "MedDev", ticker: "IHI" }, "MS": { name: "Agri", ticker: "DBA" }, "MO": { name: "Defense", ticker: "ITA" }, "MT": { name: "Mining", ticker: "XME" }, "NE": { name: "Agri", ticker: "DBA" }, "NV": { name: "Gaming", ticker: "GDX" }, "NH": { name: "Tech", ticker: "XLK" }, "NJ": { name: "Pharma", ticker: "PJP" }, "NM": { name: "Defense", ticker: "ITA" }, "NY": { name: "Bank", ticker: "XLF" }, "NC": { name: "Bank", ticker: "KBE" }, "ND": { name: "Oil", ticker: "XOP" }, "OH": { name: "Industry", ticker: "XLI" }, "OK": { name: "Oil", ticker: "XLE" }, "OR": { name: "Tech", ticker: "SMH" }, "PA": { name: "Steel", ticker: "SLX" }, "RI": { name: "Health", ticker: "XLV" }, "SC": { name: "Auto", ticker: "CARZ" }, "SD": { name: "Bank", ticker: "XLF" }, "TN": { name: "Auto", ticker: "CARZ" }, "TX": { name: "Energy", ticker: "XLE" }, "UT": { name: "Cloud", ticker: "SKYY" }, "VT": { name: "Green", ticker: "PBW" }, "VA": { name: "Data", ticker: "ITA" }, "WA": { name: "Aero", ticker: "ITA" }, "WV": { name: "Coal", ticker: "KOL" }, "WI": { name: "Industry", ticker: "XLI" }, "WY": { name: "Coal", ticker: "XME" }
+        };
+
+        const stateCountiesData = {
+            "AL": [ {n:"Jefferson", c:"Birmingham", i:"Banking", g:55}, {n:"Madison", c:"Huntsville", i:"Aerospace", g:48}, {n:"Mobile", c:"Mobile", i:"Shipping", g:32} ],
+            "AK": [ {n:"Anchorage", c:"Anchorage", i:"Logistics", g:28}, {n:"North Slope", c:"Prudhoe Bay", i:"Oil", g:12}, {n:"Fairbanks", c:"Fairbanks", i:"Mining", g:10} ],
+            "AZ": [ {n:"Maricopa", c:"Phoenix", i:"Tech/Semi", g:310}, {n:"Pima", c:"Tucson", i:"Defense", g:55}, {n:"Coconino", c:"Flagstaff", i:"Tourism", g:8} ],
+            "AR": [ {n:"Pulaski", c:"Little Rock", i:"Gov/Health", g:42}, {n:"Benton", c:"Bentonville", i:"Retail HQ", g:38}, {n:"Washington", c:"Fayetteville", i:"Education", g:22} ],
+            "CA": [ {n:"Los Angeles", c:"LA", i:"Entertainment", g:850}, {n:"Santa Clara", c:"San Jose", i:"Big Tech", g:400}, {n:"San Francisco", c:"SF", i:"Finance", g:200}, {n:"San Diego", c:"San Diego", i:"Biotech", g:250} ],
+            "CO": [ {n:"Denver", c:"Denver", i:"Finance", g:110}, {n:"El Paso", c:"Colo. Spgs", i:"Defense", g:50}, {n:"Arapahoe", c:"Aurora", i:"Aerospace", g:65}, {n:"Boulder", c:"Boulder", i:"Tech/R&D", g:45} ],
+            "CT": [ {n:"Fairfield", c:"Stamford", i:"Hedge Funds", g:120}, {n:"Hartford", c:"Hartford", i:"Insurance", g:95}, {n:"New Haven", c:"New Haven", i:"Yale/Edu", g:60} ],
+            "DE": [ {n:"New Castle", c:"Wilmington", i:"Corporate", g:65}, {n:"Sussex", c:"Georgetown", i:"Agri/Tourism", g:15} ],
+            "FL": [ {n:"Miami-Dade", c:"Miami", i:"Finance", g:180}, {n:"Broward", c:"Ft. Laud.", i:"Tourism", g:120}, {n:"Orange", c:"Orlando", i:"Theme Parks", g:110}, {n:"Hillsborough", c:"Tampa", i:"Health", g:100} ],
+            "GA": [ {n:"Fulton", c:"Atlanta", i:"Corp HQ", g:160}, {n:"Gwinnett", c:"Lawrenceville", i:"Tech", g:60}, {n:"Cobb", c:"Marietta", i:"Logistics", g:55} ],
+            "HI": [ {n:"Honolulu", c:"Honolulu", i:"Tourism/Def", g:70}, {n:"Hawaii", c:"Hilo", i:"Agri/Sci", g:12}, {n:"Maui", c:"Kahului", i:"Luxury Hosp", g:10} ],
+            "ID": [ {n:"Ada", c:"Boise", i:"Tech", g:35}, {n:"Canyon", c:"Nampa", i:"Agri", g:12}, {n:"Kootenai", c:"Coeur d'Alene", i:"Tourism", g:8} ],
+            "IL": [ {n:"Cook", c:"Chicago", i:"Finance/Trade", g:450}, {n:"DuPage", c:"Naperville", i:"Tech/R&D", g:95}, {n:"Lake", c:"Waukegan", i:"Pharma", g:75} ],
+            "IN": [ {n:"Marion", c:"Indy", i:"Pharma/Log", g:110}, {n:"Lake", c:"Gary", i:"Steel", g:35}, {n:"Allen", c:"Ft. Wayne", i:"Defense", g:30} ],
+            "IA": [ {n:"Polk", c:"Des Moines", i:"Insurance", g:55}, {n:"Linn", c:"Cedar Rapids", i:"Agri-Tech", g:25}, {n:"Scott", c:"Davenport", i:"Mfg", g:20} ],
+            "KS": [ {n:"Johnson", c:"Overland Park", i:"Telecom", g:65}, {n:"Sedgwick", c:"Wichita", i:"Aviation", g:45}, {n:"Wyandotte", c:"Kansas City", i:"Auto Mfg", g:15} ],
+            "KY": [ {n:"Jefferson", c:"Louisville", i:"Logistics", g:70}, {n:"Fayette", c:"Lexington", i:"Edu/Health", g:35}, {n:"Boone", c:"Florence", i:"Air Freight", g:15} ],
+            "LA": [ {n:"Orleans", c:"New Orleans", i:"Tourism/Port", g:45}, {n:"E. Baton Rouge", c:"Baton Rouge", i:"Petrochem", g:55}, {n:"Jefferson", c:"Metairie", i:"Shipping", g:35} ],
+            "ME": [ {n:"Cumberland", c:"Portland", i:"Finance", g:35}, {n:"York", c:"Alfred", i:"Defense/Ship", g:15}, {n:"Penobscot", c:"Bangor", i:"Paper/Log", g:10} ],
+            "MD": [ {n:"Montgomery", c:"Bethesda", i:"Biotech/Gov", g:110}, {n:"Prince George", c:"Largo", i:"Defense", g:90}, {n:"Baltimore", c:"Towson", i:"Healthcare", g:85} ],
+            "MA": [ {n:"Middlesex", c:"Cambridge", i:"Biotech/Edu", g:200}, {n:"Suffolk", c:"Boston", i:"Finance", g:140}, {n:"Worcester", c:"Worcester", i:"Mfg/Health", g:60} ],
+            "MI": [ {n:"Wayne", c:"Detroit", i:"Auto Mfg", g:150}, {n:"Oakland", c:"Troy", i:"Auto Tech", g:130}, {n:"Kent", c:"Grand Rapids", i:"Furniture", g:45} ],
+            "MN": [ {n:"Hennepin", c:"Minneapolis", i:"Retail/Bank", g:140}, {n:"Ramsey", c:"St. Paul", i:"Gov/Health", g:55}, {n:"Olmsted", c:"Rochester", i:"Mayo Clinic", g:18} ],
+            "MS": [ {n:"Hinds", c:"Jackson", i:"Gov/Health", g:20}, {n:"Harrison", c:"Gulfport", i:"Shipbuilding", g:15}, {n:"DeSoto", c:"Hernando", i:"Logistics", g:12} ],
+            "MO": [ {n:"St. Louis", c:"Clayton", i:"Finance/Bio", g:95}, {n:"Jackson", c:"Kansas City", i:"Tech/Eng", g:65}, {n:"Greene", c:"Springfield", i:"Retail HQ", g:22} ],
+            "MT": [ {n:"Yellowstone", c:"Billings", i:"Energy/Ref", g:12}, {n:"Gallatin", c:"Bozeman", i:"Tech/Tour", g:8}, {n:"Missoula", c:"Missoula", i:"Edu/Health", g:7} ],
+            "NE": [ {n:"Douglas", c:"Omaha", i:"Finance", g:60}, {n:"Lancaster", c:"Lincoln", i:"Gov/Edu", g:25}, {n:"Sarpy", c:"Papillion", i:"Defense", g:15} ],
+            "NV": [ {n:"Clark", c:"Las Vegas", i:"Gaming/Hosp", g:135}, {n:"Washoe", c:"Reno", i:"Logistics", g:35}, {n:"Elko", c:"Elko", i:"Gold Mining", g:5} ],
+            "NH": [ {n:"Hillsborough", c:"Manchester", i:"Tech/Health", g:35}, {n:"Rockingham", c:"Portsmouth", i:"Defense", g:30}, {n:"Merrimack", c:"Concord", i:"Gov/Ins", g:12} ],
+            "NJ": [ {n:"Bergen", c:"Hackensack", i:"Retail/Health", g:95}, {n:"Middlesex", c:"New Bruns.", i:"Pharma", g:85}, {n:"Hudson", c:"Jersey City", i:"Finance", g:70} ],
+            "NM": [ {n:"Bernalillo", c:"Albuquerque", i:"Energy/Tech", g:45}, {n:"Santa Fe", c:"Santa Fe", i:"Gov/Art", g:12}, {n:"Doña Ana", c:"Las Cruces", i:"Defense", g:10} ],
+            "NY": [ {n:"New York", c:"Manhattan", i:"Global Fin", g:600}, {n:"Kings", c:"Brooklyn", i:"Tech/Media", g:120}, {n:"Suffolk", c:"Hamptons", i:"Tourism/Sci", g:95}, {n:"Erie", c:"Buffalo", i:"Mfg/Health", g:60} ],
+            "NC": [ {n:"Mecklenburg", c:"Charlotte", i:"Banking", g:150}, {n:"Wake", c:"Raleigh", i:"Tech/R&D", g:110}, {n:"Durham", c:"Durham", i:"Biotech", g:45} ],
+            "ND": [ {n:"Cass", c:"Fargo", i:"Tech/Agri", g:18}, {n:"Burleigh", c:"Bismarck", i:"Gov/Energy", g:8}, {n:"Williams", c:"Williston", i:"Oil/Frack", g:12} ],
+            "OH": [ {n:"Franklin", c:"Columbus", i:"Insurance", g:140}, {n:"Cuyahoga", c:"Cleveland", i:"Health", g:110}, {n:"Hamilton", c:"Cincinnati", i:"Consumer", g:95} ],
+            "OK": [ {n:"Oklahoma", c:"OKC", i:"Energy/Gov", g:75}, {n:"Tulsa", c:"Tulsa", i:"Aerospace", g:60}, {n:"Cleveland", c:"Norman", i:"Edu/Weath", g:15} ],
+            "OR": [ {n:"Multnomah", c:"Portland", i:"Apparel/Tech", g:95}, {n:"Washington", c:"Hillsboro", i:"Semiconduc", g:75}, {n:"Lane", c:"Eugene", i:"Edu/Wood", g:25} ],
+            "PA": [ {n:"Philadelphia", c:"Philly", i:"Health/Edu", g:130}, {n:"Allegheny", c:"Pittsburgh", i:"Robotics", g:110}, {n:"Montgomery", c:"Norristown", i:"Pharma", g:100} ],
+            "RI": [ {n:"Providence", c:"Providence", i:"Health/Edu", g:45}, {n:"Kent", c:"Warwick", i:"Retail/Air", g:15}, {n:"Washington", c:"Kingston", i:"Tourism", g:10} ],
+            "SC": [ {n:"Greenville", c:"Greenville", i:"Auto/Eng", g:45}, {n:"Richland", c:"Columbia", i:"Gov/Ins", g:35}, {n:"Charleston", c:"Charleston", i:"Port/Tech", g:40} ],
+            "SD": [ {n:"Minnehaha", c:"Sioux Falls", i:"Banking", g:25}, {n:"Pennington", c:"Rapid City", i:"Tourism", g:8}, {n:"Lincoln", c:"Harrisburg", i:"Health", g:6} ],
+            "TN": [ {n:"Davidson", c:"Nashville", i:"Health/Music", g:95}, {n:"Shelby", c:"Memphis", i:"Logistics", g:80}, {n:"Knox", c:"Knoxville", i:"Energy/Edu", g:35} ],
+            "TX": [ {n:"Harris", c:"Houston", i:"Energy/Med", g:450}, {n:"Dallas", c:"Dallas", i:"Telecom/Fin", g:280}, {n:"Travis", c:"Austin", i:"Tech/Gov", g:190}, {n:"Bexar", c:"San Antonio", i:"Military", g:130} ],
+            "UT": [ {n:"Salt Lake", c:"SLC", i:"Fin/Health", g:110}, {n:"Utah", c:"Provo", i:"SaaS Tech", g:45}, {n:"Davis", c:"Farmington", i:"Defense", g:25} ],
+            "VT": [ {n:"Chittenden", c:"Burlington", i:"Tech/Edu", g:15}, {n:"Washington", c:"Montpelier", i:"Gov/Ins", g:8}, {n:"Rutland", c:"Rutland", i:"Tourism", g:5} ],
+            "VA": [ {n:"Fairfax", c:"Tysons", i:"Defense/Int", g:150}, {n:"Loudoun", c:"Ashburn", i:"Data Centers", g:90}, {n:"Henrico", c:"Richmond", i:"Finance", g:45} ],
+            "WA": [ {n:"King", c:"Seattle", i:"Cloud/Aero", g:400}, {n:"Pierce", c:"Tacoma", i:"Military/Log", g:60}, {n:"Snohomish", c:"Everett", i:"Aerospace", g:55} ],
+            "WV": [ {n:"Kanawha", c:"Charleston", i:"Gov/Energy", g:20}, {n:"Monongalia", c:"Morgantown", i:"Edu/Health", g:12}, {n:"Cabell", c:"Huntington", i:"Health", g:10} ],
+            "WI": [ {n:"Milwaukee", c:"Milwaukee", i:"Brew/Mfg", g:90}, {n:"Dane", c:"Madison", i:"Health/Tech", g:65}, {n:"Waukesha", c:"Waukesha", i:"Retail/Med", g:55} ],
+            "WY": [ {n:"Laramie", c:"Cheyenne", i:"Gov/AFB", g:12}, {n:"Natrona", c:"Casper", i:"Energy", g:10}, {n:"Campbell", c:"Gillette", i:"Coal Mining", g:15} ]
+        };
+
+        // --- GLOBALS ---
+        let globalData = [];
+        const container = document.getElementById("grid-container");
+        const mapElement = document.getElementById("us-map");
+        const bootBar = document.getElementById('boot-bar');
+        const btnToggle = document.getElementById('btn-toggle-all');
+
+        const moneyFormatter = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+
+        // --- LOGIC HELPERS ---
+        function getWeatherEmoji(code) {
+            if (code === 0) return "☀️"; if (code >= 1 && code <= 3) return "⛅"; if (code === 45 || code === 48) return "🌫️";
+            if (code >= 51 && code <= 67) return "🌧️"; if (code >= 71 && code <= 77) return "❄️"; if (code >= 80 && code <= 82) return "🌦️";
+            if (code >= 85 && code <= 86) return "🌨️"; if (code >= 95 && code <= 99) return "⛈️"; return "📡";
+        }
+
+        function getMonthWealth(gdpBillions) {
+            if (!gdpBillions) return 0;
+            const annualGDP = gdpBillions * 1_000_000_000;
+            const now = new Date();
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+            const secondsPassed = (now - startOfMonth) / 1000;
+            return (annualGDP / 31536000) * secondsPassed;
+        }
+
+        function calculateRisk(alerts) {
+            if (!alerts || alerts.length === 0) return 1;
+            let maxScore = 1;
+            alerts.forEach(alert => {
+                let score = 0;
+                const sev = alert.properties.severity; 
+                const event = (alert.properties.event || "").toLowerCase();
+                if (event.includes("fog") || event.includes("frost")) { score = 1; } 
+                else {
+                    if (sev === "Extreme") score += 5; else if (sev === "Severe") score += 3; else if (sev === "Moderate") score += 1;
+                    const urg = alert.properties.urgency;
+                    if (urg === "Immediate") score += 5; else if (urg === "Expected") score += 3; else if (urg === "Future") score += 1;
+                }
+                if (score > maxScore) maxScore = score;
+            });
+            return Math.min(maxScore, 10);
+        }
+
+        function getHeatColor(gdp) {
+            const gdps = capitals.map(c => c.gdp);
+            const min = Math.log(Math.min(...gdps));
+            const max = Math.log(Math.max(...gdps));
+            const val = Math.log(gdp);
+            let ratio = (val - min) / (max - min);
+            if (ratio < 0) ratio = 0; if (ratio > 1) ratio = 1;
+            const hue = ratio * 120;
+            return `hsl(${hue}, 100%, 40%)`;
+        }
+
+        function isLowGDP(gdp) {
+            const gdps = capitals.map(c => c.gdp).sort((a,b) => a-b);
+            const cutoff = gdps[Math.floor(gdps.length * 0.3)];
+            return gdp <= cutoff;
+        }
+
+        function getSectorTicker(industryName) {
+            if (!industryName) return "SPY";
+            const i = industryName.toLowerCase();
+            if (i.includes("tech") || i.includes("semi") || i.includes("data") || i.includes("cloud")) return "XLK";
+            if (i.includes("bank") || i.includes("fin") || i.includes("insur") || i.includes("hedge")) return "XLF";
+            if (i.includes("energy") || i.includes("oil") || i.includes("petro")) return "XLE";
+            if (i.includes("aero") || i.includes("defense")) return "ITA";
+            if (i.includes("mining") || i.includes("steel") || i.includes("coal")) return "XME";
+            if (i.includes("health") || i.includes("med") || i.includes("bio") || i.includes("pharma")) return "XLV";
+            if (i.includes("auto") || i.includes("manuf") || i.includes("ind")) return "XLI";
+            if (i.includes("agri") || i.includes("corn") || i.includes("wheat")) return "DBA";
+            if (i.includes("real") || i.includes("estate")) return "XLRE";
+            if (i.includes("logis") || i.includes("ship") || i.includes("trans")) return "IYT";
+            if (i.includes("tour") || i.includes("game") || i.includes("hosp")) return "PEJ";
+            if (i.includes("retail")) return "XRT";
+            if (i.includes("gold")) return "GDX";
+            return "SPY"; 
+        }
+
+        // --- BATCH FETCHING LOGIC ---
+        async function fetchBatch(batch) {
+            const promises = batch.map(async (cap) => {
+                try {
+                    const url = `https://api.open-meteo.com/v1/forecast?latitude=${cap.lat}&longitude=${cap.long}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&temperature_unit=fahrenheit&wind_speed_unit=mph`;
+                    const wResp = await fetch(url);
+                    const wData = await wResp.json();
+                    
+                    const aUrl = `https://api.weather.gov/alerts/active?point=${cap.lat},${cap.long}`;
+                    const aResp = await fetch(aUrl);
+                    const aData = await aResp.json();
+
+                    return { cap, wData, aData };
+                } catch (e) {
+                    console.log("Error fetching", cap.state);
+                    return null;
+                }
+            });
+            return await Promise.all(promises);
+        }
+
+        // --- MAIN RENDER LOGIC ---
+        function processStateData(dataObj) {
+            if(!dataObj) return;
+            const { cap, wData, aData } = dataObj;
+
+            const alerts = aData.features || [];
+            const risk = calculateRisk(alerts);
+            
+            let summary = "";
+            if (alerts.length > 0) {
+                summary = alerts[0].properties.headline || alerts[0].properties.event;
+            }
+
+            let localWeather = wData.current || {};
+
+            const stateObj = {
+                capital: cap,
+                riskIndex: risk,
+                summary: summary,
+                temp: localWeather.temperature_2m ? Math.round(localWeather.temperature_2m) : "--",
+                wind: localWeather.wind_speed_10m ? Math.round(localWeather.wind_speed_10m) : "--",
+                hum: localWeather.relative_humidity_2m ? localWeather.relative_humidity_2m : "--",
+                emoji: localWeather.weather_code !== undefined ? getWeatherEmoji(localWeather.weather_code) : "📡"
+            };
+
+            globalData.push(stateObj);
+            renderCard(stateObj);
+            
+            // Update Map
+            const mapSq = document.getElementById(`map-${cap.state}`);
+            if (mapSq) {
+                mapSq.style.backgroundColor = getHeatColor(cap.gdp);
+                mapSq.classList.add('live');
+                
+                if (risk > 3) {
+                    mapSq.classList.add('border-orange');
+                } else if (cap.rate > 5.0) { // High Unemployment (> 5%)
+                    mapSq.style.border = "2px solid #ff0055";
+                    mapSq.style.zIndex = "10";
+                } else if (cap.rate < 3.0) { // Low Unemployment (< 3%)
+                    mapSq.style.border = "2px solid #00ff9f";
+                    mapSq.style.zIndex = "10";
+                } else if (isLowGDP(cap.gdp)) {
+                    mapSq.classList.add('border-pink');
+                }
+            }
+        }
+
+        function renderCard(item) {
+            const card = document.createElement("div");
+            card.className = "card";
+            card.id = `card-${item.capital.state}`;
+            
+            const closeBtn = `<div class="close-card-btn" onclick="closeCard(event, '${item.capital.state}')">×</div>`;
+            
+            card.onclick = function(e) {
+                if(e.target.tagName === 'A' || e.target.classList.contains('close-card-btn')) return;
+                toggleCard(this);
+            };
+            
+            let colorClass = "risk-low";
+            if (item.riskIndex >= 8) colorClass = "risk-crit";
+            else if (item.riskIndex >= 5) colorClass = "risk-high";
+            else if (item.riskIndex >= 3) colorClass = "risk-med";
+            card.classList.add(colorClass);
+
+            const monthlyWealth = getMonthWealth(item.capital.gdp);
+            
+            // MONTH OVER MONTH CALCULATION
+            // Monthly Growth Rate approx = Annual Growth / 12
+            const momRate = item.capital.growth / 12;
+            const lastMonthWealth = monthlyWealth / (1 + (momRate / 100));
+            const delta = monthlyWealth - lastMonthWealth;
+            
+            const trendArrow = delta >= 0 ? "▲" : "▼";
+            const trendColor = delta >= 0 ? "var(--color-green)" : "var(--color-red)";
+
+            const industryData = stateIndustries[item.capital.state] || { name: "Diversified", ticker: "SPY" };
+
+            let actionBtn = "";
+            if (item.riskIndex >= 4) {
+                 actionBtn = `<a href="https://www.google.com/search?q=weather+alert+${item.capital.state}" target="_blank" class="action-btn btn-danger">⚠️ RISK ADVISORY: ${item.summary.split(' ')[0]}</a>`;
+            }
+            
+            let contextDisplay = "";
+            if (item.riskIndex > 1) {
+                contextDisplay = `<div class="alert-desc">${item.summary}</div>`;
+            } else {
+                contextDisplay = `<div class="industry-text">${industryData.name} SECTOR</div>`;
+            }
+
+            const counties = stateCountiesData[item.capital.state] || [{n:"Metro Area", c:item.capital.hub, i:"General", g:0}];
+            let countyHTML = "";
+            counties.forEach(c => {
+                const ticker = getSectorTicker(c.i);
+                // Convert Annual County GDP (g) to Monthly
+                const cMonthly = (c.g * 1_000_000_000) / 12;
+                countyHTML += `
+                    <div class="county-row">
+                        <span class="c-name">${c.n} (${c.c})</span>
+                        <span class="c-sector">${c.i}</span>
+                        <span class="c-gdp">${moneyFormatter.format(cMonthly)}</span>
+                        <span class="c-action">
+                            <a href="https://finance.yahoo.com/quote/${ticker}" target="_blank" class="btn-mini">📈 ${ticker}</a>
+                        </span>
+                    </div>
+                `;
+            });
+
+            card.innerHTML = `
+                ${closeBtn}
+                <div class="card-header">
+                    <div>
+                        <span class="weather-icon">${item.emoji}</span>
+                        <span class="state-name">${item.capital.state} <a href="https://news.google.com/search?q=${item.capital.state}+economy" target="_blank" class="btn-link">📰</a></span>
+                    </div>
+                    <span class="risk-score">Risk ${item.riskIndex}/10</span>
+                </div>
+                
+                <div class="weather-stats">
+                    <div class="stat-item"><span>TEMP</span><span class="stat-val">${item.temp}°F</span></div>
+                    <div class="stat-item"><span>WIND</span><span class="stat-val">${item.wind} mph</span></div>
+                    <div class="stat-item">
+                        <span>TRAFFIC</span>
+                        <a href="https://www.google.com/maps/@${item.capital.lat},${item.capital.long},7z/data=!5m1!1e1" target="_blank" style="text-decoration:none; display:block; margin-top:4px;">🚦</a>
+                    </div>
+                </div>
+
+                <div class="econ-stats">
+                    <span class="econ-label">Est. Mo. Output</span>
+                    <div class="econ-flex">
+                        <div class="econ-value">
+                            ${moneyFormatter.format(monthlyWealth)}
+                        </div>
+                        <div class="econ-delta" style="color:${trendColor}">
+                            ${trendArrow} ${moneyFormatter.format(Math.abs(delta))} (vs Last Mo)
+                        </div>
+                    </div>
+                </div>
+
+                ${contextDisplay}
+                
+                <div class="expand-hint">View Top Economic Zones</div>
+
+                <div class="county-panel">
+                    <div class="county-row" style="font-size:0.7em; color:#666; text-transform:uppercase;">
+                        <span>County</span><span>Sector</span><span>Est. Mo. Output</span><span>Trade</span>
+                    </div>
+                    ${countyHTML}
+                </div>
+                
+                <div class="card-footer">${actionBtn}</div>
+            `;
+            container.appendChild(card);
+        }
+
+        // --- INTERACTION LOGIC ---
+        function focusState(stateCode) {
+            const card = document.getElementById(`card-${stateCode}`);
+            if (card) {
+                card.classList.add('visible');
+                if (!card.classList.contains('expanded')) {
+                    card.classList.add('expanded');
+                }
+                card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                syncMapState(stateCode, true);
+            }
+        }
+
+        function syncMapState(stateCode, isVisible) {
+            const mapSq = document.getElementById(`map-${stateCode}`);
+            if (mapSq) {
+                if (isVisible) mapSq.classList.add('selected');
+                else mapSq.classList.remove('selected');
+            }
+        }
+
+        function mapClickToggle(stateCode) {
+            const card = document.getElementById(`card-${stateCode}`);
+            if (card) {
+                if (card.classList.contains('visible')) {
+                    closeCard(null, stateCode);
+                } else {
+                    card.classList.add('visible');
+                    card.classList.remove('expanded');
+                    syncMapState(stateCode, true);
+                    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+        }
+
+        function closeCard(event, stateCode) {
+            if (event) event.stopPropagation();
+            const card = document.getElementById(`card-${stateCode}`);
+            if (card) {
+                card.classList.remove('visible', 'expanded');
+                syncMapState(stateCode, false);
+            }
+        }
+
+        function toggleCard(card) {
+            card.classList.toggle("expanded");
+        }
+
+        function activateMapInteractions() {
+            document.querySelectorAll('.map-state').forEach(sq => {
+                sq.classList.add('ready');
+                sq.onclick = function() { mapClickToggle(this.innerText); };
+            });
+        }
+
+        // --- CONTROLS ---
+        let isShowingAll = false;
+        function toggleShowAll() {
+            isShowingAll = !isShowingAll;
+            if (isShowingAll) {
+                showAll();
+                btnToggle.innerText = "Hide All";
+            } else {
+                hideAll();
+                btnToggle.innerText = "Show All";
+            }
+        }
+
+        function showAll() {
+            document.querySelectorAll('.card').forEach(c => {
+                c.classList.add('visible');
+                c.classList.remove('expanded');
+                syncMapState(c.id.replace('card-', ''), true);
+            });
+        }
+
+        function hideAll() {
+            document.querySelectorAll('.card').forEach(c => {
+                c.classList.remove('visible', 'expanded');
+                syncMapState(c.id.replace('card-', ''), false);
+            });
+            isShowingAll = false;
+            btnToggle.innerText = "Show All";
+        }
+
+        function filterRisks() {
+            hideAll();
+            globalData.forEach(item => {
+                if (item.riskIndex > 3) {
+                    const c = document.getElementById(`card-${item.capital.state}`);
+                    if (c) {
+                        c.classList.add('visible');
+                        syncMapState(item.capital.state, true);
+                    }
+                }
+            });
+        }
+
+        function sortWealth() {
+            const visibleIds = new Set();
+            document.querySelectorAll('.card.visible').forEach(c => visibleIds.add(c.id));
+            
+            globalData.sort((a, b) => b.capital.gdp - a.capital.gdp);
+            
+            container.innerHTML = ""; 
+            globalData.forEach(item => renderCard(item)); 
+            
+            document.querySelectorAll('.card').forEach(c => {
+                if (visibleIds.has(c.id)) {
+                    c.classList.add('visible');
+                    syncMapState(c.id.replace('card-', ''), true);
+                }
+            });
+            activateMapInteractions();
+        }
+
+        function refreshDashboard() {
+            document.getElementById('loading-screen').style.display = 'flex';
+            document.getElementById('main-interface').style.display = 'none';
+            globalData = [];
+            document.querySelectorAll('.map-state').forEach(sq => {
+                sq.className = 'map-state'; // Reset classes
+                sq.style.backgroundColor = "";
+                sq.style.border = "";
+                sq.onclick = null;
+            });
+            container.innerHTML = "";
+            if (bootBar) bootBar.style.width = "0%";
+            startDashboard();
+        }
+
+        // --- MAP INIT ---
+        function initMap() {
+            mapElement.innerHTML = "";
+            for (const [stateCode, coords] of Object.entries(mapGrid)) {
+                const cell = document.createElement("div");
+                cell.className = "map-state";
+                cell.id = `map-${stateCode}`;
+                cell.innerText = stateCode;
+                cell.style.gridRowStart = coords[0] + 1;
+                cell.style.gridColumnStart = coords[1] + 1;
+                mapElement.appendChild(cell);
+            }
+        }
+
+        // --- MAIN LOOP (BATCHING) ---
+        async function startDashboard() {
+            const BATCH_SIZE = 5;
+            let completed = 0;
+            
+            for (let i = 0; i < capitals.length; i += BATCH_SIZE) {
+                const batch = capitals.slice(i, i + BATCH_SIZE);
+                
+                const results = await fetchBatch(batch);
+                
+                results.forEach(data => {
+                    if(data) processStateData(data);
+                });
+
+                completed += batch.length;
+                const progress = (completed / capitals.length) * 100;
+                if (bootBar) bootBar.style.width = `${progress}%`;
+
+                await new Promise(r => setTimeout(r, 200));
+            }
+
+            await new Promise(r => setTimeout(r, 500));
+            activateMapInteractions();
+            document.getElementById('loading-screen').style.display = 'none';
+            document.getElementById('main-interface').style.display = 'block';
+        }
+
+        initMap();
+        startDashboard();
+    </script>
+</body>
+</html>
