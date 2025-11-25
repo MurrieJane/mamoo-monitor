@@ -30,7 +30,7 @@
             padding: 0;
             min-height: 100vh;
             overflow-x: hidden;
-            -webkit-tap-highlight-color: transparent; /* Removes blue tap box on mobile */
+            -webkit-tap-highlight-color: transparent;
         }
 
         /* --- LOADING SCREEN --- */
@@ -53,13 +53,13 @@
             transition: width 0.2s ease-out;
         }
 
-        /* --- LEGEND (MOBILE OPTIMIZED) --- */
+        /* --- LEGEND (ADAPTIVE) --- */
         #legend-container {
             position: fixed; z-index: 1000;
             transition: transform 0.3s ease;
         }
 
-        /* Desktop Legend (Side) */
+        /* DESKTOP VIEW (Side Panel) */
         @media (min-width: 769px) {
             #legend-container { left: 0; top: 20%; transform: translateX(-260px); display: flex; align-items: flex-start; }
             #legend-container.open { transform: translateX(0); }
@@ -78,21 +78,23 @@
             }
         }
 
-        /* Mobile Legend (Bottom Sheet) */
+        /* MOBILE VIEW (Bottom Sheet) */
         @media (max-width: 768px) {
             #legend-container { bottom: 0; left: 0; width: 100%; transform: translateY(100%); flex-direction: column; }
             #legend-container.open { transform: translateY(0); }
             #legend-toggle {
-                position: fixed; bottom: 20px; right: 20px; /* Floating Button */
-                background: var(--color-blue); color: #000; border-radius: 50%;
-                width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;
+                position: fixed; bottom: 20px; right: 20px;
+                background: var(--color-blue); color: #000;
+                width: 50px; height: 50px; border-radius: 50%;
+                display: flex; align-items: center; justify-content: center;
                 font-weight: bold; box-shadow: 0 0 15px var(--color-blue);
                 z-index: 1001; cursor: pointer; transform: translateY(-100%); /* Move up with menu */
+                writing-mode: horizontal-tb;
             }
             #legend-content {
                 width: 100%; background: #1a1d2e; border-top: 2px solid var(--color-blue);
-                padding: 20px; padding-bottom: 80px; /* Space for button */
-                max-height: 50vh; overflow-y: auto;
+                padding: 20px; padding-bottom: 80px;
+                max-height: 50vh; overflow-y: auto; box-sizing: border-box;
             }
         }
 
@@ -107,126 +109,138 @@
         .swatch-blue { border: 2px solid var(--color-blue); background: var(--color-blue); }
 
         /* --- MAIN INTERFACE --- */
-        #main-interface { padding: 10px; animation: fade-in 0.5s ease-out; padding-bottom: 80px; /* Space for mobile footer */ }
+        #main-interface { padding: 20px; animation: fade-in 0.5s ease-out; padding-bottom: 80px; }
         @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
 
         h1 { 
             font-family: 'Orbitron', sans-serif; text-transform: uppercase; 
-            letter-spacing: 2px; color: var(--color-blue); text-align: center;
-            margin-bottom: 20px; border-bottom: 1px solid var(--border-dim); padding-bottom: 15px;
-            font-size: 1.5em;
+            letter-spacing: 4px; color: var(--color-blue); text-align: center;
+            margin-bottom: 30px; border-bottom: 1px solid var(--border-dim); padding-bottom: 20px;
         }
 
         /* --- CONTROLS --- */
-        .controls { margin: 15px 0; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+        .controls { margin: 20px 0; display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
         button {
             background: var(--bg-panel); color: var(--color-blue); 
-            border: 1px solid var(--color-blue); padding: 8px 12px; border-radius: 4px; 
-            font-family: 'Orbitron', sans-serif; font-size: 0.7em; letter-spacing: 1px; 
-            cursor: pointer; transition: all 0.2s; text-transform: uppercase; flex: 1 1 40%;
+            border: 1px solid var(--color-blue); padding: 10px 24px; border-radius: 4px; 
+            font-family: 'Orbitron', sans-serif; font-size: 0.8em; letter-spacing: 1px; 
+            cursor: pointer; transition: all 0.2s; text-transform: uppercase; min-width: 120px;
         }
-        button:hover { background: var(--color-blue); color: #000; }
+        button:hover { background: var(--color-blue); color: #000; transform: translateY(-2px); }
         .btn-alert { border-color: var(--color-red); color: var(--color-red); }
         .btn-alert:hover { background: var(--color-red); color: #fff; }
         .btn-money { border-color: var(--color-green); color: var(--color-green); }
         .btn-money:hover { background: var(--color-green); color: #000; }
 
-        /* --- MAP --- */
+        /* --- MAP (RESPONSIVE) --- */
         #map-container {
-            display: flex; justify-content: center; margin: 20px auto; padding: 10px;
+            display: flex; justify-content: center; margin: 30px auto; padding: 30px;
             background: var(--bg-panel); border: 1px solid var(--border-dim);
-            border-radius: 8px; max-width: 100%; overflow-x: auto; /* Allow scroll on tiny screens */
+            border-radius: 8px; max-width: 800px; transition: all 0.3s;
         }
-        #us-map { display: grid; grid-template-columns: repeat(12, 26px); grid-template-rows: repeat(8, 26px); gap: 3px; }
         
-        @media (min-width: 768px) {
-             #us-map { grid-template-columns: repeat(12, 35px); grid-template-rows: repeat(8, 35px); gap: 6px; }
+        /* Desktop Map */
+        #us-map { 
+            display: grid; 
+            grid-template-columns: repeat(12, 35px); 
+            grid-template-rows: repeat(8, 35px); 
+            gap: 6px; 
         }
-
         .map-state {
-            width: 100%; height: 100%; border-radius: 2px;
+            width: 35px; height: 35px; border-radius: 2px;
             display: flex; align-items: center; justify-content: center;
-            font-size: 9px; font-family: 'Orbitron', sans-serif;
+            font-size: 10px; font-family: 'Orbitron', sans-serif;
             color: #555; background-color: #222; border: 1px solid #333;
             transition: all 0.2s ease; cursor: default;
         }
+
+        /* Mobile Map Overrides */
+        @media (max-width: 768px) {
+            h1 { font-size: 1.5em; letter-spacing: 2px; }
+            .controls { gap: 10px; }
+            button { padding: 8px 12px; font-size: 0.7em; flex: 1 1 40%; }
+            
+            #map-container { padding: 15px; max-width: 100%; }
+            #us-map { 
+                grid-template-columns: repeat(12, 24px); /* Smaller cells */
+                grid-template-rows: repeat(8, 24px); 
+                gap: 3px; 
+            }
+            .map-state { width: 24px; height: 24px; font-size: 8px; }
+        }
+
         .map-state.live { color: #fff; cursor: pointer; border: 1px solid rgba(255,255,255,0.3); }
         .map-state.border-orange { border: 2px solid var(--color-orange) !important; z-index: 10; }
         .map-state.border-pink { border: 2px solid var(--color-pink) !important; z-index: 5; }
         .map-state.selected { background-color: var(--color-blue) !important; color: #000; border: 2px solid #fff !important; z-index: 50; }
+        .map-state.ready:hover { transform: scale(1.2); z-index: 100; border-color: #fff; }
 
         /* --- CARDS --- */
-        #grid-container { display: grid; grid-template-columns: 1fr; gap: 15px; }
-        @media (min-width: 768px) { #grid-container { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); } }
+        #grid-container { display: grid; gap: 20px; padding: 0 20px; }
+        
+        /* Desktop Grid */
+        @media (min-width: 769px) {
+            #grid-container { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
+            .card.expanded { grid-column: span 2; }
+        }
+        /* Mobile Grid */
+        @media (max-width: 768px) {
+            #grid-container { grid-template-columns: 1fr; padding: 0 10px; }
+            .card.expanded { grid-column: span 1; }
+        }
         
         .card {
             background: var(--bg-panel); border: 1px solid var(--border-dim);
-            border-radius: 4px; padding: 15px; transition: all 0.2s; display: none;
+            border-radius: 4px; padding: 20px; transition: all 0.2s; display: none;
         }
         .card.visible { display: block; }
+        .card:hover { transform: translateY(-3px); border-color: var(--color-blue); }
         .card.expanded { background: #1a1d2e; border-color: var(--color-blue); z-index: 10; }
-        @media (min-width: 768px) { .card.expanded { grid-column: span 2; } }
 
-        .card-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-dim); padding-bottom: 10px; margin-bottom: 10px; margin-right: 25px; }
-        .state-name { font-family: 'Orbitron', sans-serif; font-size: 1.2em; color: #fff; }
-        .risk-score { font-family: 'Orbitron', sans-serif; font-size: 1em; color: var(--color-red); }
+        .card-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-dim); padding-bottom: 15px; margin-bottom: 15px; margin-right: 25px; }
+        .state-name { font-family: 'Orbitron', sans-serif; font-size: 1.4em; color: #fff; }
+        .risk-score { font-family: 'Orbitron', sans-serif; font-size: 1.2em; color: var(--color-red); }
         
-        .weather-stats { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.9em; color: #889; background: #0b0c15; padding: 8px; border-radius: 4px; }
-        .stat-val { display: block; color: #fff; font-weight: 700; font-size: 1.1em; margin-top: 2px; }
+        .weather-stats { display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 1em; color: #889; background: #0b0c15; padding: 10px; border-radius: 4px; }
+        .stat-val { display: block; color: #fff; font-weight: 700; font-size: 1.2em; margin-top: 4px; }
         
-        .econ-stats { background: #0b0c15; margin-top: 10px; padding: 10px; border-radius: 4px; border: 1px solid var(--border-dim); }
+        .econ-stats { background: #0b0c15; margin-top: 10px; padding: 15px; border-radius: 4px; border: 1px solid var(--border-dim); }
         .econ-label { font-family: 'Orbitron', sans-serif; font-size: 0.7em; color: #667; letter-spacing: 1px; margin-bottom: 5px; }
-        .econ-value { font-size: 1.2em; font-weight: 700; color: var(--color-green); display: flex; justify-content: space-between; }
+        .econ-value { font-size: 1.4em; font-weight: 700; color: var(--color-green); display: flex; justify-content: space-between; }
+        .trend-up { color: var(--color-green); } .trend-down { color: var(--color-red); }
         
-        .alert-desc { color: var(--color-red); margin-top: 10px; font-weight: bold; font-size: 0.85em; }
-        .industry-text { font-family: 'Orbitron', sans-serif; font-size: 0.75em; color: var(--color-purple); letter-spacing: 2px; margin-top: 10px; text-align: center; }
+        .alert-desc { color: var(--color-red); margin-top: 15px; font-weight: bold; font-size: 0.9em; }
+        .industry-text { font-family: 'Orbitron', sans-serif; font-size: 0.8em; color: var(--color-purple); letter-spacing: 2px; margin-top: 15px; text-align: center; }
 
-        .close-card-btn { position: absolute; top: 10px; right: 10px; width: 24px; height: 24px; line-height: 22px; text-align: center; border-radius: 50%; background: var(--border-dim); color: #fff; cursor: pointer; transition: all 0.2s; display: none; font-family: sans-serif; }
+        .close-card-btn { position: absolute; top: 15px; right: 15px; width: 28px; height: 28px; line-height: 26px; text-align: center; border-radius: 50%; background: var(--border-dim); color: #fff; cursor: pointer; transition: all 0.2s; display: none; font-family: sans-serif; }
         .card.visible .close-card-btn { display: block; }
+        .close-card-btn:hover { background: var(--color-red); }
 
-        .county-panel { display: none; margin-top: 15px; padding-top: 10px; border-top: 1px dashed var(--border-dim); }
+        .county-panel { display: none; margin-top: 20px; padding-top: 10px; border-top: 1px dashed var(--border-dim); }
         .card.expanded .county-panel { display: block; }
         
-        /* MOBILE OPTIMIZED COUNTY ROW */
-        .county-row { 
-            display: grid; 
-            grid-template-columns: 1fr auto; 
-            gap: 5px; 
-            padding: 8px 0; 
-            border-bottom: 1px solid var(--border-dim); 
-        }
-        .c-info { display: flex; flex-direction: column; }
-        .c-name { color: #fff; font-weight: 500; font-size: 0.9em; }
-        .c-sector { color: #88a; font-size: 0.75em; margin-top: 2px; }
+        .county-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border-dim); }
+        .c-name { color: #fff; font-weight: 500; width: 35%; }
+        .c-sector { color: #88a; font-size: 0.9em; width: 20%; text-align:center; }
+        .c-gdp { color: var(--color-green); width: 20%; text-align: right; font-family: 'Orbitron', monospace; font-size: 0.9em; }
         
-        .c-data { text-align: right; display: flex; flex-direction: column; align-items: flex-end; }
-        .c-gdp { color: var(--color-green); font-family: 'Orbitron', monospace; font-size: 0.8em; margin-bottom: 4px; }
+        .btn-mini { padding: 4px 10px; font-size: 0.8em; font-family: 'Orbitron', sans-serif; color: var(--color-green); border: 1px solid var(--color-green); background: transparent; border-radius: 20px; text-decoration: none; transition: all 0.2s; width: 25%; text-align: center; }
+        .btn-mini:hover { background: var(--color-green); color: #000; }
         
-        .btn-mini { 
-            padding: 4px 8px; font-size: 0.75em; font-family: 'Orbitron', sans-serif; 
-            color: var(--color-green); border: 1px solid var(--color-green); 
-            background: transparent; border-radius: 4px; text-decoration: none; 
-            display: inline-block; 
-        }
-        
-        .expand-hint { text-align: center; font-size: 0.65em; color: #556; margin-top: 10px; letter-spacing: 1px; text-transform: uppercase; }
-        .card-footer { margin-top: 15px; }
-        .action-btn { display: block; width: 100%; padding: 10px 0; border-radius: 4px; text-decoration: none; font-weight: bold; font-family: 'Orbitron', sans-serif; letter-spacing: 1px; text-transform: uppercase; position: relative; z-index: 5; text-align: center; font-size: 0.8em; }
+        .expand-hint { text-align: center; font-size: 0.7em; color: #556; margin-top: 15px; letter-spacing: 1px; text-transform: uppercase; }
+        .card-footer { margin-top: 20px; }
+        .action-btn { display: block; width: 100%; padding: 12px 0; border-radius: 4px; text-decoration: none; font-weight: bold; font-family: 'Orbitron', sans-serif; letter-spacing: 1px; transition: all 0.3s; text-transform: uppercase; position: relative; z-index: 5; text-align: center; font-size: 0.9em; }
         .btn-danger { background: rgba(255, 0, 85, 0.1); color: var(--color-red); border: 1px solid var(--color-red); }
+        .btn-danger:hover { background: var(--color-red); color: #fff; }
+        .btn-link { text-decoration: none; color: var(--color-blue); font-size: 0.8em; margin-left: 10px; opacity: 0.7; transition: opacity 0.2s; }
+        .btn-link:hover { opacity: 1; text-shadow: 0 0 5px var(--color-blue); }
         
-        #status-bar { text-align: center; font-family: 'Orbitron', sans-serif; font-size: 0.7em; color: var(--color-blue); letter-spacing: 2px; margin-top: 10px; }
+        .risk-low { border-left: 4px solid var(--color-green); }
+        .risk-med { border-left: 4px solid var(--color-orange); }
+        .risk-high { border-left: 4px solid var(--color-red); }
+        .risk-crit { border-left: 4px solid var(--color-purple); }
         
-        /* Mobile Key Toggle Fix */
-        @media (max-width: 768px) {
-            #legend-toggle {
-                position: fixed; bottom: 20px; right: 20px;
-                background: var(--color-blue); color: #000;
-                width: 50px; height: 50px; border-radius: 50%;
-                display: flex; align-items: center; justify-content: center;
-                writing-mode: horizontal-tb; box-shadow: 0 0 20px var(--color-blue);
-                z-index: 2000;
-            }
-        }
+        #status-bar { text-align: center; font-family: 'Orbitron', sans-serif; font-size: 0.8em; color: var(--color-blue); letter-spacing: 2px; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -285,6 +299,7 @@
             document.getElementById('legend-container').classList.toggle('open');
         }
 
+        // --- DATA ---
         const capitals = [
             { state: "AL", lat: 33.51, long: -86.81, gdp: 247, growth: 3.1, rate: 3.3, hub: "Birmingham" },
             { state: "AK", lat: 61.21, long: -149.90, gdp: 65, growth: 4.5, rate: 4.7, hub: "Anchorage" },
@@ -598,14 +613,12 @@
                 const cMonthly = (c.g * 1_000_000_000) / 12;
                 countyHTML += `
                     <div class="county-row">
-                        <div class="c-info">
-                            <span class="c-name">${c.n} (${c.c})</span>
-                            <span class="c-sector">${c.i} Sector</span>
-                        </div>
-                        <div class="c-data">
-                            <span class="c-gdp">${moneyFormatter.format(cMonthly)}</span>
+                        <span class="c-name">${c.n} (${c.c})</span>
+                        <span class="c-sector">${c.i}</span>
+                        <span class="c-gdp">${moneyFormatter.format(cMonthly)}</span>
+                        <span class="c-action">
                             <a href="https://finance.yahoo.com/quote/${ticker}" target="_blank" class="btn-mini">📈 ${ticker}</a>
-                        </div>
+                        </span>
                     </div>
                 `;
             });
@@ -646,6 +659,9 @@
                 <div class="expand-hint">View Top Economic Zones</div>
 
                 <div class="county-panel">
+                    <div class="county-row" style="font-size:0.7em; color:#666; text-transform:uppercase;">
+                        <span>County</span><span>Sector</span><span>Est. Mo. Output</span><span>Trade</span>
+                    </div>
                     ${countyHTML}
                 </div>
                 
